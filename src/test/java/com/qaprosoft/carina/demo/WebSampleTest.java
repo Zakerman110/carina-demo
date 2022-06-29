@@ -17,6 +17,9 @@ package com.qaprosoft.carina.demo;
 
 import java.util.List;
 
+import com.qaprosoft.carina.demo.gui.components.HeaderMenu;
+import com.qaprosoft.carina.demo.gui.components.LoginComponent;
+import com.qaprosoft.carina.demo.gui.pages.*;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.testng.Assert;
@@ -32,11 +35,6 @@ import com.qaprosoft.carina.demo.gui.components.FooterMenu;
 import com.qaprosoft.carina.demo.gui.components.NewsItem;
 import com.qaprosoft.carina.demo.gui.components.compare.ModelSpecs;
 import com.qaprosoft.carina.demo.gui.components.compare.ModelSpecs.SpecType;
-import com.qaprosoft.carina.demo.gui.pages.BrandModelsPage;
-import com.qaprosoft.carina.demo.gui.pages.CompareModelsPage;
-import com.qaprosoft.carina.demo.gui.pages.HomePage;
-import com.qaprosoft.carina.demo.gui.pages.ModelInfoPage;
-import com.qaprosoft.carina.demo.gui.pages.NewsPage;
 
 /**
  * This sample shows how create Web test.
@@ -116,6 +114,124 @@ public class WebSampleTest implements IAbstractTest {
                     "Invalid search results for " + n.readTitle());
         }
         softAssert.assertAll();
+    }
+
+    @Test()
+    @MethodOwner(owner = "Artur")
+    public void testRegister() {
+        HomePage homePage = new HomePage(getDriver());
+        homePage.open();
+        Assert.assertTrue(homePage.isPageOpened(), "Home page is not opened!");
+
+        HeaderMenu headerMenu = homePage.getHeaderMenu();
+        Assert.assertTrue(headerMenu.isUIObjectPresent(2), "Header menu wasn't found!");
+
+        Assert.assertTrue(headerMenu.isSignupButtonPresent(), "Sign Up button wasn't found!");
+
+        RegisterPage registerPage = headerMenu.openRegisterPage();
+
+        // Check if register elements are present
+        SoftAssert softAssert = new SoftAssert();
+        softAssert.assertTrue(registerPage.isNicknameFieldPresent(), "Nickname field wasn't found");
+        softAssert.assertTrue(registerPage.isEmailFieldPresent(), "Email field wasn't found");
+        softAssert.assertTrue(registerPage.isPasswordFieldPresent(), "Password field wasn't found");
+        softAssert.assertTrue(registerPage.isAgreeCheckboxPresent(), "Agree checkbox wasn't found");
+        softAssert.assertTrue(registerPage.isAgeCheckboxPresent(), "Age checkbox wasn't found");
+        softAssert.assertTrue(registerPage.isSubmitButtonPresent(), "Submit button wasn't found");
+        softAssert.assertAll();
+
+        // Register
+        registerPage = registerPage.register("artur28061611","artur28061611@gmail.com", "artur1337");
+        Assert.assertEquals(registerPage.readRegisterStatus(), "Your account was created.", "Register was not successful!");
+    }
+
+    @Test()
+    @MethodOwner(owner = "Artur")
+    public void testLoginModal() {
+        HomePage homePage = new HomePage(getDriver());
+        homePage.open();
+        Assert.assertTrue(homePage.isPageOpened(), "Home page is not opened!");
+
+        HeaderMenu headerMenu = homePage.getHeaderMenu();
+        Assert.assertTrue(headerMenu.isUIObjectPresent(2), "Header menu wasn't found!");
+
+        Assert.assertTrue(headerMenu.isLoginButtonPresent(), "Login button wasn't found!");
+
+        LoginComponent loginComponent = headerMenu.clickLoginComponent();
+
+        // Check if login elements are present
+        SoftAssert softAssert = new SoftAssert();
+        softAssert.assertTrue(loginComponent.isLoginTitlePresent(), "Login title wasn't found");
+        softAssert.assertTrue(loginComponent.isEmailFieldPresent(), "Email field wasn't found");
+        softAssert.assertTrue(loginComponent.isPasswordFieldPresent(), "Password field wasn't found");
+        softAssert.assertTrue(loginComponent.isLoginButtonPresent(), "Login button wasn't found");
+        softAssert.assertTrue(loginComponent.isForgotLinkPresent(), "Forgot link wasn't found");
+        softAssert.assertAll();
+
+        // Check if hover color of login button is red(#d50000)
+        loginComponent.hoverLoginButton();
+        // wait for hover animation
+        Assert.assertEquals(loginComponent.getLoginButtonBackgroundColor(), "#d50000",
+                "Hover color of login button is not red(#d50000)!");
+
+        // Check validation message on empty email field
+        loginComponent.clickLogin();
+        Assert.assertEquals(loginComponent.getEmailFieldValidationMessage(), "Заполните это поле.",
+                "Email field validation message incorrect!");
+
+        // Email validation - incomplete email
+        loginComponent.enterEmail("asd@");
+        loginComponent.clickLogin();
+        Assert.assertEquals(loginComponent.getEmailFieldValidationMessage(),
+                "Введите часть адреса после символа \"@\". Адрес \"asd@\" неполный.",
+                "Email field validation message incorrect!");
+
+        // Password validation - incomplete password
+        loginComponent.enterEmail("asd@gmail.com");
+        loginComponent.enterPassword("asd");
+        loginComponent.clickLogin();
+        Assert.assertEquals(loginComponent.getPasswordFieldValidationMessage(),
+                "Введите данные в указанном формате.",
+                "Email field validation message incorrect!");
+
+        // Password validation - incomplete password
+        loginComponent.enterEmail("asd@gmail.com");
+        loginComponent.enterPassword("asdasd");
+        LoginRedirectPage loginRedirectPage = loginComponent.clickLogin();
+        Assert.assertEquals(loginRedirectPage.readLoginStatus(),
+                "Login failed.",
+                "Login status wasn't found!");
+
+    }
+
+    @Test()
+    @MethodOwner(owner = "Artur")
+    public void testLogin() {
+        HomePage homePage = new HomePage(getDriver());
+        homePage.open();
+        Assert.assertTrue(homePage.isPageOpened(), "Home page is not opened!");
+
+        HeaderMenu headerMenu = homePage.getHeaderMenu();
+        Assert.assertTrue(headerMenu.isUIObjectPresent(2), "Header menu wasn't found!");
+
+        Assert.assertTrue(headerMenu.isLoginButtonPresent(), "Login button wasn't found!");
+
+        LoginComponent loginComponent = headerMenu.clickLoginComponent();
+
+        // Check if login elements are present
+        SoftAssert softAssert = new SoftAssert();
+        softAssert.assertTrue(loginComponent.isLoginTitlePresent(), "Login title wasn't found");
+        softAssert.assertTrue(loginComponent.isEmailFieldPresent(), "Email field wasn't found");
+        softAssert.assertTrue(loginComponent.isPasswordFieldPresent(), "Password field wasn't found");
+        softAssert.assertTrue(loginComponent.isLoginButtonPresent(), "Login button wasn't found");
+        softAssert.assertTrue(loginComponent.isForgotLinkPresent(), "Forgot link wasn't found");
+        softAssert.assertAll();
+
+        // Login
+        LoginRedirectPage loginRedirectPage = loginComponent.login("pohix51095@qqhow.com", "artur1337");
+        Assert.assertEquals(loginRedirectPage.readLoginStatus(), "Login successful.", "Login was not successful!");
+
+        Assert.assertTrue(homePage.isPageOpened(), "Home page is not opened!");
     }
 
 }
