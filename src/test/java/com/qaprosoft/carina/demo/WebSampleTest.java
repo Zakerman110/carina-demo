@@ -16,6 +16,8 @@
 package com.qaprosoft.carina.demo;
 
 import java.util.List;
+import java.util.Random;
+import java.util.UUID;
 
 import com.qaprosoft.carina.demo.gui.components.HeaderMenu;
 import com.qaprosoft.carina.demo.gui.components.LoginComponent;
@@ -23,6 +25,7 @@ import com.qaprosoft.carina.demo.gui.pages.*;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.testng.Assert;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import org.testng.asserts.SoftAssert;
 
@@ -140,14 +143,19 @@ public class WebSampleTest implements IAbstractTest {
         softAssert.assertTrue(registerPage.isSubmitButtonPresent(), "Submit button wasn't found");
         softAssert.assertAll();
 
-        // Register
-        registerPage = registerPage.register("artur28061611","artur28061611@gmail.com", "artur1337");
+        // Register with random
+        Random random = new Random();
+        int number = random.nextInt( 100000);
+        String randomNickname = "artur" + number;
+        String randomEmail = "artur" + number + "@gmail.com";
+
+        registerPage = registerPage.register(randomNickname,randomEmail, "artur1337");
         Assert.assertEquals(registerPage.readRegisterStatus(), "Your account was created.", "Register was not successful!");
     }
 
-    @Test()
+    @Test(dataProvider = "DP1")
     @MethodOwner(owner = "Artur")
-    public void testLoginModal() {
+    public void testLoginModal(String email, String validationMessage) {
         HomePage homePage = new HomePage(getDriver());
         homePage.open();
         Assert.assertTrue(homePage.isPageOpened(), "Home page is not opened!");
@@ -160,7 +168,7 @@ public class WebSampleTest implements IAbstractTest {
         LoginComponent loginComponent = headerMenu.clickLoginComponent();
 
         // Check if login elements are present
-        SoftAssert softAssert = new SoftAssert();
+        /*SoftAssert softAssert = new SoftAssert();
         softAssert.assertTrue(loginComponent.isLoginTitlePresent(), "Login title wasn't found");
         softAssert.assertTrue(loginComponent.isEmailFieldPresent(), "Email field wasn't found");
         softAssert.assertTrue(loginComponent.isPasswordFieldPresent(), "Password field wasn't found");
@@ -172,22 +180,16 @@ public class WebSampleTest implements IAbstractTest {
         loginComponent.hoverLoginButton();
         // wait for hover animation
         Assert.assertEquals(loginComponent.getLoginButtonBackgroundColor(), "#d50000",
-                "Hover color of login button is not red(#d50000)!");
+                "Hover color of login button is not red(#d50000)!");*/
 
         // Check validation message on empty email field
+        loginComponent.enterEmail(email);
         loginComponent.clickLogin();
-        Assert.assertEquals(loginComponent.getEmailFieldValidationMessage(), "Заполните это поле.",
-                "Email field validation message incorrect!");
-
-        // Email validation - incomplete email
-        loginComponent.enterEmail("asd@");
-        loginComponent.clickLogin();
-        Assert.assertEquals(loginComponent.getEmailFieldValidationMessage(),
-                "Введите часть адреса после символа \"@\". Адрес \"asd@\" неполный.",
+        Assert.assertEquals(loginComponent.getEmailFieldValidationMessage(), validationMessage,
                 "Email field validation message incorrect!");
 
         // Password validation - incomplete password
-        loginComponent.enterEmail("asd@gmail.com");
+        /*loginComponent.enterEmail("asd@gmail.com");
         loginComponent.enterPassword("asd");
         loginComponent.clickLogin();
         Assert.assertEquals(loginComponent.getPasswordFieldValidationMessage(),
@@ -200,8 +202,18 @@ public class WebSampleTest implements IAbstractTest {
         LoginRedirectPage loginRedirectPage = loginComponent.clickLogin();
         Assert.assertEquals(loginRedirectPage.readLoginStatus(),
                 "Login failed.",
-                "Login status wasn't found!");
+                "Login status wasn't found!");*/
 
+    }
+
+    @DataProvider(parallel = false, name = "DP1")
+    public static Object[][] dataprovider()
+    {
+        return new Object[][] {
+                { "", "Заполните это поле." },
+                { "asd", "Адрес электронной почты должен содержать символ \"@\". В адресе \"asd\" отсутствует символ \"@\"." },
+                { "asd@", "Введите часть адреса после символа \"@\". Адрес \"asd@\" неполный." }
+        };
     }
 
     @Test()
